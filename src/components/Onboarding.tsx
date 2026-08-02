@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { ArrowRight, Phone, User, MapPin, Loader2, ShieldCheck, Lock } from 'lucide-react';
+import { ArrowRight, Phone, User, MapPin, Loader2, ShieldCheck, Lock, Edit3 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
 
 const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [region, setRegion] = useState('');
+  const [customRegion, setCustomRegion] = useState('');
   const [isNewUser, setIsNewUser] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const srinagarRegions = ["Lal Bazar", "Karan Nagar", "Hyderpora", "Soura", "Rajbagh", "Batamaloo", "Bemina", "Nowgam", "Hazratbal", "Khanyar", "Jawahar Nagar"];
+  const srinagarRegions = ["Lal Bazar", "Karan Nagar", "Hyderpora", "Soura", "Rajbagh", "Batamaloo", "Bemina", "Nowgam", "Hazratbal", "Khanyar", "Jawahar Nagar", "Other / Not Listed"];
 
-  // PRIVACY ENGINE: Scrambles the phone number so the Admin can't read it
   const generateHash = (str: string) => {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
@@ -27,7 +27,6 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
     setLoading(true);
 
     const secureHash = generateHash(phoneNumber);
-
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -35,11 +34,9 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
       .single();
 
     if (data) {
-      // User exists: Update login time
       await supabase.from('profiles').update({ last_login: new Date() }).eq('phone_hash', secureHash);
       onComplete(data);
     } else {
-      // User doesn't exist: Move to registration
       setIsNewUser(true);
     }
     setLoading(false);
@@ -47,15 +44,18 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!region) return alert("Please select your area");
+    
+    // Logic to determine which area to save
+    const finalRegion = region === "Other / Not Listed" ? customRegion : region;
+    
+    if (!finalRegion) return alert("Please specify your area");
     setLoading(true);
 
     const secureHash = generateHash(phoneNumber);
-
     const newUser = {
-      phone_hash: secureHash, // We save the scramble, not the number
+      phone_hash: secureHash,
       full_name: fullName,
-      geo_region: region,
+      geo_region: finalRegion,
       has_phone_access: true,
       last_login: new Date()
     };
@@ -96,7 +96,6 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
             <button disabled={loading} className="w-full bg-[#E67E22] text-white p-5 rounded-3xl font-black uppercase shadow-xl flex items-center justify-center gap-2 active:scale-95 transition-all">
               {loading ? <Loader2 className="animate-spin"/> : "Enter Community"} <ArrowRight size={20}/>
             </button>
-            <p className="text-[10px] text-slate-400 font-medium max-w-[200px] mx-auto">Your phone number is encrypted and never stored in plain text.</p>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4 animate-in slide-in-from-right duration-300">
@@ -104,7 +103,7 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
             
             <div className="text-left space-y-4">
                 <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Full Name</label>
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-tighter">Full Name</label>
                     <input 
                         type="text" placeholder="Your Name" 
                         className="w-full p-4 mt-1 rounded-2xl border-2 border-orange-100 font-bold outline-none focus:border-orange-400 bg-white shadow-sm"
@@ -113,7 +112,7 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
                 </div>
 
                 <div>
-                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2">Your Area in Srinagar</label>
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-tighter">Your Area in Srinagar</label>
                     <select 
                         className="w-full p-4 mt-1 rounded-2xl border-2 border-orange-100 font-bold outline-none focus:border-orange-400 bg-white shadow-sm cursor-pointer"
                         value={region} onChange={(e) => setRegion(e.target.value)} required
@@ -122,6 +121,24 @@ const Onboarding = ({ onComplete }: { onComplete: (user: any) => void }) => {
                         {srinagarRegions.map(r => <option key={r} value={r}>{r}</option>)}
                     </select>
                 </div>
+
+                {/* --- NEW CUSTOM AREA INPUT --- */}
+                {region === "Other / Not Listed" && (
+                    <div className="animate-in slide-in-from-top-2 duration-300">
+                        <label className="text-[10px] font-black uppercase text-orange-600 ml-2 tracking-tighter italic">Specify your location</label>
+                        <div className="relative">
+                            <Edit3 className="absolute left-4 top-4 text-orange-400" size={18} />
+                            <input 
+                                type="text" 
+                                placeholder="Enter city or locality name" 
+                                className="w-full p-4 pl-12 mt-1 rounded-2xl border-2 border-orange-300 font-bold outline-none focus:border-orange-500 bg-orange-50/30"
+                                value={customRegion} 
+                                onChange={(e) => setCustomRegion(e.target.value)} 
+                                required
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
 
             <button disabled={loading} className="w-full bg-[#4A2C2A] text-white p-5 rounded-3xl font-black uppercase shadow-xl flex items-center justify-center gap-2 mt-4 active:scale-95 transition-all">
