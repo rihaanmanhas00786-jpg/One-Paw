@@ -64,7 +64,7 @@ const HomePage: React.FC<HomeProps> = ({ onNavigate, onOpenReport, onSOS, onOpen
         </div>
       </nav>
 
-      {/* 3-COLUMN HERO SECTION */}
+      {/* HERO SECTION */}
       <section className="w-full max-w-7xl mx-auto px-6 pt-12 pb-20 grid grid-cols-1 lg:grid-cols-3 gap-10 items-stretch">
         
         {/* LEFT: About Us & University Credit */}
@@ -84,13 +84,10 @@ const HomePage: React.FC<HomeProps> = ({ onNavigate, onOpenReport, onSOS, onOpen
           
           <div className="mt-10 pt-6 border-t border-orange-100/50">
              <p className="text-[#4A2C2A] text-[11px] font-black uppercase tracking-wider mb-2">Developed By:</p>
-             <div className="bg-[#4A2C2A] text-[#FFF8F0] p-5 rounded-3xl shadow-lg border border-white/10">
-                <p className="text-xs font-bold leading-relaxed italic">
+             <div className="bg-[#4A2C2A] text-[#FFF8F0] p-6 rounded-3xl shadow-lg border border-white/10">
+                <p className="text-xs font-bold leading-relaxed italic text-center">
                     "Made by the students of <span className="text-orange-400">Design your Degree</span>, University Of Kashmir, Group A"
                 </p>
-                <div className="mt-3 flex items-center gap-2 text-[9px] font-black uppercase opacity-60 tracking-widest">
-                   <Landmark size={12}/> Academic Project 2024
-                </div>
              </div>
           </div>
         </div>
@@ -145,7 +142,7 @@ const HomePage: React.FC<HomeProps> = ({ onNavigate, onOpenReport, onSOS, onOpen
           </button>
       </div>
 
-      {/* J&K EMERGENCY DIRECTORY */}
+      {/* EMERGENCY DIRECTORY */}
       <section className="w-full max-w-7xl mx-auto px-6 py-10">
           <div className="flex flex-col items-center mb-12">
             <h2 className="text-4xl font-black text-[#4A2C2A] uppercase italic tracking-tighter mb-2">Emergency Directory</h2>
@@ -190,7 +187,7 @@ const HomePage: React.FC<HomeProps> = ({ onNavigate, onOpenReport, onSOS, onOpen
           </div>
       </section>
 
-      {/* FIXED BOTTOM SOS BUTTON */}
+      {/* SOS BUTTON */}
       <div className="fixed bottom-8 left-0 right-0 px-6 z-[2000] flex justify-center pointer-events-none">
         <button onClick={onSOS} className="pointer-events-auto w-full max-w-2xl bg-[#D35400] p-6 rounded-[35px] shadow-[0_20px_60px_rgba(211,84,0,0.5)] flex items-center justify-between text-white active:scale-95 transition-all group border-b-8 border-orange-950/20">
           <div className="flex items-center gap-4 text-left">
@@ -204,7 +201,7 @@ const HomePage: React.FC<HomeProps> = ({ onNavigate, onOpenReport, onSOS, onOpen
         </button>
       </div>
 
-      <div className="mt-20 text-[10px] font-black text-slate-300 uppercase tracking-[0.6em]">
+      <div className="mt-20 text-[10px] font-black text-slate-400 uppercase tracking-[0.6em]">
         Design your Degree • Group A
       </div>
     </div>
