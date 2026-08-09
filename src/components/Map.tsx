@@ -3,7 +3,7 @@ import { MapContainer, TileLayer, Marker, Popup, ZoomControl, useMap } from 'rea
 import 'leaflet/dist/leaflet.css';
 import { Location } from '../types';
 import { MARKER_ICONS } from '../utils/icons';
-import { Navigation, MapPin, ExternalLink } from 'lucide-react';
+import { Navigation, MapPin } from 'lucide-react';
 
 interface MapProps {
   locations: Location[];
@@ -12,25 +12,23 @@ interface MapProps {
   onMarkerClick: (loc: Location) => void;
 }
 
-// Controller to smoothly fly the camera to selected clinics
-const MapController = ({ selectedLocation }: { selectedLocation: Location | null }) => {
+const MapController = ({ loc }: { loc: Location | null }) => {
   const map = useMap();
   useEffect(() => {
-    if (selectedLocation) {
-      map.flyTo([selectedLocation.lat, selectedLocation.lng], 16, {
-        animate: true,
-        duration: 1.5
-      });
+    if (loc) {
+      map.flyTo([loc.lat, loc.lng], 17, { animate: true, duration: 1.5 });
     }
-  }, [selectedLocation, map]);
+  }, [loc, map]);
   return null;
 };
 
 const MapComponent: React.FC<MapProps> = ({ locations, selectedLocation, userPos, onMarkerClick }) => {
   
   const handleNavigate = (loc: Location) => {
-    // Exact Coordinate Query for Google Maps
-    const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(loc.name)}+Srinagar&query_place_id=${loc.lat},${loc.lng}`;
+    // PRECISE COORDINATE URL:
+    // This forces Google Maps to drop a red pin on the exact Latitude/Longitude
+    // without relying on a business name search.
+    const url = `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
     window.open(url, '_blank');
   };
 
@@ -39,7 +37,7 @@ const MapComponent: React.FC<MapProps> = ({ locations, selectedLocation, userPos
       <TileLayer url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png" />
       <ZoomControl position="bottomright" />
       
-      <MapController selectedLocation={selectedLocation} />
+      <MapController loc={selectedLocation} />
       
       {userPos && <Marker position={userPos} icon={MARKER_ICONS.user} />}
 
@@ -54,7 +52,7 @@ const MapComponent: React.FC<MapProps> = ({ locations, selectedLocation, userPos
             <div className="bg-white overflow-hidden rounded-xl w-[260px]">
               <div className={`p-4 ${loc.isGovernment ? 'bg-red-600' : 'bg-blue-600'} text-white`}>
                 <h3 className="font-bold text-base leading-tight">{loc.name}</h3>
-                <p className="text-[10px] font-black uppercase opacity-75 mt-1 tracking-widest">
+                <p className="text-[10px] font-black uppercase opacity-75 mt-1">
                    {loc.category.replace('_', ' ')}
                 </p>
               </div>
@@ -63,11 +61,12 @@ const MapComponent: React.FC<MapProps> = ({ locations, selectedLocation, userPos
                   <MapPin size={14} className="shrink-0" />
                   <span>{loc.address}</span>
                 </div>
+                
                 <button 
                   onClick={() => handleNavigate(loc)}
                   className="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-black transition-all shadow-md active:scale-95"
                 >
-                  <Navigation size={14} fill="white"/> VIEW ON GOOGLE MAPS
+                  <Navigation size={14} fill="white"/> VIEW PRECISE LOCATION
                 </button>
               </div>
             </div>
