@@ -16,7 +16,7 @@ const MapController = ({ loc }: { loc: Location | null }) => {
   const map = useMap();
   useEffect(() => {
     if (loc) {
-      map.flyTo([loc.lat, loc.lng], 17, { animate: true, duration: 1.5 });
+      map.flyTo([loc.lat, loc.lng], 16, { animate: true, duration: 1.5 });
     }
   }, [loc, map]);
   return null;
@@ -25,10 +25,11 @@ const MapController = ({ loc }: { loc: Location | null }) => {
 const MapComponent: React.FC<MapProps> = ({ locations, selectedLocation, userPos, onMarkerClick }) => {
   
   const handleNavigate = (loc: Location) => {
-    // PRECISE COORDINATE URL:
-    // This forces Google Maps to drop a red pin on the exact Latitude/Longitude
-    // without relying on a business name search.
-    const url = `https://www.google.com/maps/search/?api=1&query=${loc.lat},${loc.lng}`;
+    // RESTORED: Flexible Search Query
+    // This tells Google: "Find this specific clinic name in Srinagar"
+    // It opens the official Google Business page with photos and reviews.
+    const query = encodeURIComponent(`${loc.name}, ${loc.address}, Srinagar`);
+    const url = `https://www.google.com/maps/search/?api=1&query=${query}`;
     window.open(url, '_blank');
   };
 
@@ -53,21 +54,25 @@ const MapComponent: React.FC<MapProps> = ({ locations, selectedLocation, userPos
               <div className={`p-4 ${loc.isGovernment ? 'bg-red-600' : 'bg-blue-600'} text-white`}>
                 <h3 className="font-bold text-base leading-tight">{loc.name}</h3>
                 <p className="text-[10px] font-black uppercase opacity-75 mt-1">
-                   {loc.category.replace('_', ' ')}
+                   {loc.isGovernment ? 'Govt Hospital' : 'Pet Facility'}
                 </p>
               </div>
               <div className="p-4 space-y-3">
                 <div className="flex items-start gap-2 text-xs text-slate-500 italic">
                   <MapPin size={14} className="shrink-0" />
-                  <span>{loc.address}</span>
+                  <span>{loc.address}, Srinagar</span>
                 </div>
                 
                 <button 
                   onClick={() => handleNavigate(loc)}
                   className="w-full bg-slate-900 text-white py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 hover:bg-black transition-all shadow-md active:scale-95"
                 >
-                  <Navigation size={14} fill="white"/> VIEW PRECISE LOCATION
+                  <Navigation size={14} fill="white"/> VIEW ON GOOGLE MAPS
                 </button>
+                
+                <p className="text-[8px] text-center text-slate-300 font-mono tracking-widest">
+                  VERIFIED ONEPAW DATA
+                </p>
               </div>
             </div>
           </Popup>
