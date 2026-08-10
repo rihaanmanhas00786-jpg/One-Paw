@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, Plus, Megaphone, MapPin, Phone, X, Camera, Image as ImageIcon, CheckCircle2, Loader2 } from 'lucide-react';
 import { supabase } from '../supabaseClient';
-import { LostPet } from '../types';
 
 const LostAndFound = ({ onBack }: { onBack: () => void }) => {
-  const [pets, setPets] = useState<LostPet[]>([]);
+  const [pets, setPets] = useState<any[]>([]);
   const [isFormOpen, setIsFormOpen] = useState(false);
   
-  // --- FORM STATES (The Reliable Way) ---
+  // --- SECURE FORM STATES ---
   const [petStatus, setPetStatus] = useState('Lost');
   const [petType, setPetType] = useState('');
   const [breed, setBreed] = useState('');
@@ -19,11 +18,12 @@ const LostAndFound = ({ onBack }: { onBack: () => void }) => {
 
   const fetchPets = async () => {
     const { data } = await supabase.from('lost_pets').select('*').order('id', { ascending: false });
-    if (data) setPets(data as any);
+    if (data) setPets(data);
   };
 
   useEffect(() => { fetchPets(); }, []);
 
+  // --- IMAGE COMPRESSION (Prevents Crashes) ---
   const handleImage = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -52,7 +52,7 @@ const LostAndFound = ({ onBack }: { onBack: () => void }) => {
     try {
       const newPet = {
         type: petStatus,
-        petType: petType,
+        pet_type: petType, // Matches database pet_type
         breed: breed,
         area: area,
         description: description,
@@ -64,8 +64,8 @@ const LostAndFound = ({ onBack }: { onBack: () => void }) => {
       const { error } = await supabase.from('lost_pets').insert([newPet]);
       if (error) throw error;
 
-      // Reset everything
       setIsFormOpen(false);
+      // Reset form
       setPetType(''); setBreed(''); setArea(''); setDescription(''); setContact(''); setImage(null);
       fetchPets();
     } catch (err: any) {
@@ -77,12 +77,12 @@ const LostAndFound = ({ onBack }: { onBack: () => void }) => {
     <div className="min-h-screen bg-[#FFF8F0] pb-24 overflow-y-auto font-sans">
       {/* Header */}
       <div className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-orange-100 p-4 flex items-center justify-between shadow-sm">
-        <button onClick={onBack} className="p-2 bg-orange-50 text-orange-700 rounded-xl"><ChevronLeft size={24}/></button>
+        <button onClick={onBack} className="p-2 bg-orange-50 text-orange-700 rounded-xl transition-all active:scale-90"><ChevronLeft size={24}/></button>
         <h1 className="font-black text-xl uppercase italic text-[#4A2C2A]">Community Alerts</h1>
-        <button onClick={() => setIsFormOpen(true)} className="bg-orange-500 text-white p-2.5 rounded-xl shadow-lg"><Plus size={24}/></button>
+        <button onClick={() => setIsFormOpen(true)} className="bg-orange-500 text-white p-2.5 rounded-xl shadow-lg active:scale-90 transition-all"><Plus size={24}/></button>
       </div>
 
-      {/* Grid of Pets */}
+      {/* List of Reported Pets */}
       <div className="max-w-6xl mx-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {pets.map(pet => (
           <div key={pet.id} className="bg-white rounded-[45px] shadow-2xl border border-orange-50 overflow-hidden flex flex-col transform hover:-translate-y-1 transition-all duration-300">
@@ -96,15 +96,19 @@ const LostAndFound = ({ onBack }: { onBack: () => void }) => {
                 {pet.type}
               </div>
             </div>
-            <div className="p-8 flex-1 flex flex-col">
-              <h3 className="text-2xl font-black text-[#4A2C2A] tracking-tighter uppercase italic leading-none">{pet.petType} <span className="text-orange-500">•</span> {pet.breed}</h3>
-              <p className="text-[10px] text-orange-600 flex items-center gap-1 font-black mt-2 uppercase tracking-widest"><MapPin size={12}/> {pet.area}</p>
+            <div className="p-8 flex-1 flex flex-col text-left">
+              <h3 className="text-2xl font-black text-[#4A2C2A] tracking-tighter uppercase italic leading-none">
+                {pet.pet_type} <span className="text-orange-500">•</span> {pet.breed}
+              </h3>
+              <p className="text-[10px] text-orange-600 flex items-center gap-1 font-black mt-2 uppercase tracking-widest">
+                <MapPin size={12}/> {pet.area}
+              </p>
               <div className="bg-slate-50 p-4 rounded-3xl mt-4 flex-1">
                   <p className="text-sm text-slate-600 font-medium leading-relaxed italic">"{pet.description}"</p>
               </div>
               <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
-                  <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">{pet.date}</span>
-                  <a href={`tel:${pet.contact}`} className="bg-[#4A2C2A] text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest active:scale-95 shadow-xl">
+                  <span className="text-[10px] font-bold text-slate-300 uppercase">{pet.date}</span>
+                  <a href={`tel:${pet.contact}`} className="bg-[#4A2C2A] text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest hover:bg-orange-600 transition-all active:scale-95">
                     <Phone size={14}/> Contact
                   </a>
               </div>
@@ -120,74 +124,72 @@ const LostAndFound = ({ onBack }: { onBack: () => void }) => {
             <div className="bg-[#4A2C2A] p-10 text-white text-center relative">
               <button onClick={() => setIsFormOpen(false)} className="absolute top-6 right-6 p-2 bg-white/10 rounded-full hover:bg-white/30"><X size={20}/></button>
               <Megaphone size={48} className="mx-auto mb-4 animate-pulse text-orange-400" />
-              <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">New Alert</h2>
+              <h2 className="text-3xl font-black uppercase italic tracking-tighter text-white">Create Alert</h2>
             </div>
             
             <form onSubmit={handleSubmit} className="p-10 space-y-5">
               <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                     <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Status</label>
                     <select 
-                      value={petStatus} 
-                      onChange={(e) => setPetStatus(e.target.value)}
+                      value={petStatus} onChange={(e) => setPetStatus(e.target.value)}
                       className="w-full p-4 bg-slate-100 rounded-2xl font-bold border-none outline-none focus:ring-2 focus:ring-orange-500 cursor-pointer"
                     >
-                        <option value="Lost">Lost</option>
-                        <option value="Found">Found</option>
+                        <option value="Lost">Lost</option><option value="Found">Found</option>
                     </select>
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Type</label>
+                <div className="space-y-1 text-left">
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Pet Type</label>
                     <input 
                       value={petType} onChange={(e) => setPetType(e.target.value)}
-                      placeholder="Dog/Cat" className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
+                      placeholder="e.g. Dog" className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
                     />
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
+                <div className="space-y-1 text-left">
                     <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Breed</label>
                     <input 
                       value={breed} onChange={(e) => setBreed(e.target.value)}
                       placeholder="Breed Name" className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
                     />
                 </div>
-                <div className="space-y-1">
-                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Area</label>
+                <div className="space-y-1 text-left">
+                    <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Locality</label>
                     <input 
                       value={area} onChange={(e) => setArea(e.target.value)}
-                      placeholder="Locality" className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
+                      placeholder="Area in Srinagar" className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
                     />
                 </div>
               </div>
               
-              <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Pet Image</label>
+              <div className="space-y-1 text-left">
+                <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Upload Photo</label>
                 <label className={`w-full p-6 border-2 border-dashed rounded-[32px] flex flex-col items-center justify-center gap-2 cursor-pointer transition-all ${image ? 'bg-emerald-50 border-emerald-500' : 'bg-orange-50 border-orange-200 hover:bg-orange-100'}`}>
                     {isCompressing ? <Loader2 className="animate-spin text-orange-500" /> : (
                       image ? <CheckCircle2 className="text-emerald-500" size={32}/> : <Camera className="text-orange-500" size={32}/>
                     )}
                     <span className={`font-black text-[10px] uppercase tracking-widest ${image ? 'text-emerald-600' : 'text-orange-600'}`}>
-                        {isCompressing ? "Shrinking..." : image ? "Success" : "Upload Image"}
+                        {isCompressing ? "Shrinking..." : image ? "Success" : "Choose Image"}
                     </span>
                     <input type="file" accept="image/*" className="hidden" onChange={handleImage} disabled={isCompressing} />
                 </label>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Additional Details</label>
+              <div className="space-y-1 text-left">
+                <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Identifying Details</label>
                 <textarea 
                   value={description} onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Unique features..." className="w-full p-4 bg-slate-100 rounded-2xl h-20 outline-none font-medium text-sm" required 
+                  placeholder="Unique features, collar, marks..." className="w-full p-4 bg-slate-100 rounded-2xl h-20 outline-none font-medium text-sm" required 
                 />
               </div>
 
-              <div className="space-y-1">
+              <div className="space-y-1 text-left">
                 <label className="text-[9px] font-black uppercase text-slate-400 ml-2">Contact Number</label>
                 <input 
                   value={contact} onChange={(e) => setContact(e.target.value)}
-                  placeholder="Phone No." className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
+                  placeholder="Your Phone Number" className="w-full p-4 bg-slate-100 rounded-2xl font-bold outline-none focus:ring-2 focus:ring-orange-500" required 
                 />
               </div>
 
